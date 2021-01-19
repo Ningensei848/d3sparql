@@ -25,121 +25,128 @@
       Should follow the convention in the miserables.json https://gist.github.com/mbostock/4062045 to contain group for nodes and value for edges.
   */
 
-import * as d3 from "d3"
+// cf. https://github.com/ktym/d3sparql/blob/master/d3sparql.js#L110
 
-// TODO: JSONに型情報をつける
-const graph = (json, config) => {
-  config = config || {}
+import { Failure, Result, Success } from "@/types/handling"
+import { BooleanMemberJSONResponse, JSONResponse, RDFTerm, ResultsMemberJSONResponse } from "@/types/response"
+import { Graph, GraphConfig, Option } from "@/types/util/graph"
 
-  const head = json.head.vars
-  const data = json.results.bindings
+// interface graphConfig {
+//   key1?: string
+//   key2?: string
+//   label1?: string
+//   label2?: string
+//   value1?: string
+//   value2?: string
+// }
 
-  const check = d3.map()
+// interface Node {
+//   key: string
+//   label: string | false
+//   value: string | false
+// }
+// interface Edge {
+//   source?: number
+//   target?: number
+// }
 
-  const opts = {
-    key1: config.key1 || head[0] || "key1",
-    key2: config.key2 || head[1] || "key2",
-    label1: config.label1 || head[2] || false,
-    label2: config.label2 || head[3] || false,
-    value1: config.value1 || head[4] || false,
-    value2: config.value2 || head[5] || false
+// interface Graph {
+//   nodes: Array<Node>
+//   edges: Array<Edge>
+// }
+
+// interface Option {
+//   key1: string
+//   key2: string
+//   label1: string | false
+//   label2: string | false
+//   value1: string | false
+//   value2: string | false
+// }
+
+const hogehoge = (datum: { [key: string]: RDFTerm }, opts: GraphConfig): GraphConfig => {
+  const { key1, key2, label1, label2, value1, value2 } = opts
+  return {
+    key1: datum[key1].value,
+    key2: datum[key2].value,
+    label1: label1 ? datum[label1].value : key1,
+    label2: label2 ? datum[label2].value : key2,
+    value1: value1 ? datum[value1].value : false,
+    value2: value2 ? datum[value2].value : false
   }
-  const graph = {
+}
+
+const mainProcess = (json: ResultsMemberJSONResponse, config: Option): Graph => {
+  const { head, results } = json
+  const data = results.bindings
+  const vars = head.vars ? head.vars : []
+
+  const opts: GraphConfig = {
+    key1: config.key1 || vars[0] || "key1",
+    key2: config.key2 || vars[1] || "key2",
+    label1: config.label1 || vars[2] || false,
+    label2: config.label2 || vars[3] || false,
+    value1: config.value1 || vars[4] || false,
+    value2: config.value2 || vars[5] || false
+  }
+  const graph: Graph = {
     nodes: [],
-    links: []
+    edges: []
   }
+
+  const checkDict: { [key: string]: number } = {}
 
   let index = 0
-
   for (const datum of data) {
-    const key1 = datum[opts.key1].value
-    const key2 = datum[opts.key2].value
-    const label1 = opts.label1 ? datum[opts.label1].value : key1
-    const label2 = opts.label2 ? datum[opts.label2].value : key2
-    const value1 = opts.value1 ? datum[opts.value1].value : false
-    const value2 = opts.value2 ? datum[opts.value2].value : false
-    if (!check.has(key1)) {
+    const { key1, key2, label1, label2, value1, value2 } = hogehoge(datum, opts)
+
+    if (!(key1 in checkDict)) {
       graph.nodes.push({ key: key1, label: label1, value: value1 })
-      check.set(key1, index)
+      checkDict[key1] = index
       index++
     }
-    if (!check.has(key2)) {
+    if (!(key2 in checkDict)) {
       graph.nodes.push({ key: key2, label: label2, value: value2 })
-      check.set(key2, index)
+      checkDict[key2] = index
       index++
     }
-    graph.links.push({ source: check.get(key1), target: check.get(key2) })
-  }
 
-  // for (var i = 0; i < data.length; i++) {
-  //   var key1 = data[i][opts.key1].value
-  //   var key2 = data[i][opts.key2].value
-  //   var label1 = opts.label1 ? data[i][opts.label1].value : key1
-  //   var label2 = opts.label2 ? data[i][opts.label2].value : key2
-  //   var value1 = opts.value1 ? data[i][opts.value1].value : false
-  //   var value2 = opts.value2 ? data[i][opts.value2].value : false
-  //   if (!check.has(key1)) {
-  //     graph.nodes.push({ key: key1, label: label1, value: value1 })
-  //     check.set(key1, index)
-  //     index++
-  //   }
-  //   if (!check.has(key2)) {
-  //     graph.nodes.push({ key: key2, label: label2, value: value2 })
-  //     check.set(key2, index)
-  //     index++
-  //   }
-  //   graph.links.push({ source: check.get(key1), target: check.get(key2) })
-  // }
-
-  if (d3sparql.debug) {
-    console.log(JSON.stringify(graph))
+    graph.edges.push({
+      source: key1 in checkDict ? checkDict[key1] : undefined,
+      target: key2 in checkDict ? checkDict[key2] : undefined
+    })
   }
   return graph
 }
 
-export default graph
+// TODO: JSONResponse が Boolean だった時の場合の処理を追加
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const subProcess = (json: BooleanMemberJSONResponse, config: Option): Graph => {
+  const graph: Graph = {
+    nodes: [],
+    edges: []
+  }
+  return graph
+}
 
-// d3sparql.graph = function (json, config) {
-//   config = config || {}
+const parseGraph = (json: JSONResponse, config: Option): Result<Graph, TypeError> => {
+  if (json.results) {
+    const graph = mainProcess({ head: json.head, results: json.results }, config)
+    return new Success(graph)
+  } else if (json.boolean) {
+    const graph = subProcess({ head: json.head, boolean: json.boolean }, config)
+    return new Success(graph)
+  } else {
+    return new Failure(new TypeError(`${JSON.stringify(json, null, 2)}\n\nJSON response is invalid !\n\n`))
+  }
+}
 
-//   var head = json.head.vars
-//   var data = json.results.bindings
+export const graph = (json: JSONResponse, config: Option = {}): Graph => {
+  const res = parseGraph(json, config)
 
-//   var opts = {
-//     key1: config.key1 || head[0] || 'key1',
-//     key2: config.key2 || head[1] || 'key2',
-//     label1: config.label1 || head[2] || false,
-//     label2: config.label2 || head[3] || false,
-//     value1: config.value1 || head[4] || false,
-//     value2: config.value2 || head[5] || false
-//   }
-//   var graph = {
-//     nodes: [],
-//     links: []
-//   }
-//   var check = d3.map()
-//   var index = 0
-//   for (var i = 0; i < data.length; i++) {
-//     var key1 = data[i][opts.key1].value
-//     var key2 = data[i][opts.key2].value
-//     var label1 = opts.label1 ? data[i][opts.label1].value : key1
-//     var label2 = opts.label2 ? data[i][opts.label2].value : key2
-//     var value1 = opts.value1 ? data[i][opts.value1].value : false
-//     var value2 = opts.value2 ? data[i][opts.value2].value : false
-//     if (!check.has(key1)) {
-//       graph.nodes.push({ key: key1, label: label1, value: value1 })
-//       check.set(key1, index)
-//       index++
-//     }
-//     if (!check.has(key2)) {
-//       graph.nodes.push({ key: key2, label: label2, value: value2 })
-//       check.set(key2, index)
-//       index++
-//     }
-//     graph.links.push({ source: check.get(key1), target: check.get(key2) })
-//   }
-//   if (d3sparql.debug) {
-//     console.log(JSON.stringify(graph))
-//   }
-//   return graph
-// }
+  if (res.isSuccess()) {
+    return res.value
+  } else {
+    throw res.isFailure() // TypeError
+  }
+}
