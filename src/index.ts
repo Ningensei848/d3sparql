@@ -14,7 +14,7 @@
 
 // import * as d3 from 'd3'
 
-import { query } from "@/library/d3sparql/util/query"
+import { query } from "@/util/query"
 
 const d3sparql = {
   version: "d3sparql.js version 2021-01-XX",

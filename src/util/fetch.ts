@@ -10,7 +10,6 @@
 // Definitely Types: cf. https://github.com/axios/axios/blob/master/test/typescript/axios.ts
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios"
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const fetch = async (config: AxiosRequestConfig): Promise<AxiosResponse> => {
   const res = await axios
     .request(config)

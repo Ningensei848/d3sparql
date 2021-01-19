@@ -1,4 +1,4 @@
-import fetch from "@/library/d3sparql/util/fetch"
+import fetch from "@/util/fetch"
 import { AxiosRequestConfig, AxiosResponse } from "axios"
 import { Parser } from "sparqljs"
 
