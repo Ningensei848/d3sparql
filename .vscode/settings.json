@@ -1,0 +1,33 @@
+{
+    // common settings
+    "json.maxItemsComputed": 10000,
+    "json.schemas": [
+        {
+            "fileMatch": [
+                "**/*/package.json"
+            ],
+            "url": "https://json.schemastore.org/package"
+        }
+    ],
+    "files.autoSave": "afterDelay",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // prettier
+    "prettier.ignorePath": ".config/.prettierignore",
+    "prettier.configPath": ".config/.prettierrc.json",
+    "prettier.packageManager": "yarn",
+    // eslint
+    "eslint.lintTask.enable": false,
+    "eslint.lintTask.options": "-c ./.config/.eslintrc.json --ignore-path ./.config/.eslintignore",
+    "eslint.packageManager": "yarn",
+    "eslint.alwaysShowStatus": true,
+    "eslint.options": {
+        "configFile": "./.config/.eslintrc.json"
+    },
+    // jest
+    "jest.debugMode": true,
+    "jest.enableInlineErrorMessages": true,
+    "jest.pathToConfig": "./jest.config.ts",
+    "jest.rootPath": ".",
+    "eslint.runtime": "/home/kiai/.nvm/versions/node/v14.15.4/bin/node"
+}

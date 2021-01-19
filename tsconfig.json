@@ -1,0 +1,51 @@
+{
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "compilerOptions": {
+        "strict": true,
+        "allowJs": true,
+        "checkJs": false,
+        "sourceMap": true,
+        "incremental": true,
+        "skipLibCheck": true,
+        "declaration": true,
+        "declarationMap": true,
+        "removeComments": true,
+        "noImplicitAny": true,
+        "noUnusedLocals": true,
+        "noImplicitReturns": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node",
+        "resolveJsonModule": true,
+        "module": "esnext",
+        "target": "ESNext",
+        "lib": [
+            "dom",
+            "dom.iterable",
+            "ESNext"
+        ],
+        "newLine": "lf",
+        "outDir": "dist",
+        "baseUrl": "./",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ]
+        },
+        "typeRoots": [
+            "./node_modules/@types",
+            "./src/types"
+        ]
+    },
+    "include": [
+        "src/**/*",
+        "test/**/*"
+    ],
+    "exclude": [
+        "dist",
+        "node_modules"
+    ]
+}

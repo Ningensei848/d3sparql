@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json.schemastore.org/package",
+  "name": "d3sparql",
+  "author": "Kubokawa.K",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ningensei848/d3sparql.git"
+  },
+  "engines": {
+    "node": ">= 14.15"
+  },
+  "license": "MIT",
+  "scripts": {
+    "cf": "echo 'cf. https://classic.yarnpkg.com/en/docs/cli/'",
+    "package.json": "cat ./package.json",
+    "package.json:cf": "echo 'cf. https://docs.npmjs.com/cli/v6/configuring-npm/package-json'",
+    "webpack:cf": "webpack --help=verbose && echo 'cf. https://webpack.js.org/api/cli/'",
+    "dev": "cross-env TS_NODE_PROJECT=\"./.config/tsconfig.webpack.json\" webpack serve --mode development",
+    "build": "rm -rf ./dist && cross-env TS_NODE_PROJECT=\"./.config/tsconfig.webpack.json\" webpack --mode production",
+    "type:check": "tsc --project tsconfig.json --pretty --noEmit",
+    "test": "jest --config ./jest.config.ts",
+    "test:cf": "yarn test --help && echo 'cf. https://jestjs.io/docs/en/cli'",
+    "test:watch": "yarn test --watch",
+    "prettier": "prettier './{src,test}/**/*.{js,ts,tsx,css,md,json}' --config './.config/.prettierrc.json' --ignore-path './.config/.prettierignore'",
+    "prettier:cf": "prettier --help && echo 'cf. https://prettier.io/docs/en/cli.html'",
+    "format": "yarn prettier --write",
+    "format:check": "yarn prettier --check",
+    "lint": "eslint ./{src,test}/**/*.{js,mjs,,ts,tsx} --config './.config/.eslintrc.json' --ignore-path './.config/.eslintignore'",
+    "lint:cf": "eslint --help && echo https://eslint.org/docs/user-guide/command-line-interface",
+    "lint:fix": "yarn lint --cache --cache-location './.config/.eslintcache' && yarn format",
+    "lint:target": "echo ./{src,test}/**/*.{js,mjs,ts,tsx}",
+    "temp_prepare": "npm run build"
+  },
+  "devDependencies": {
+    "@types/d3": "^6.2.0",
+    "@types/jest": "^26.0.20",
+    "@types/node": "^14.14.21",
+    "@types/webpack": "^4.41.26",
+    "@types/webpack-dev-server": "^3.11.1",
+    "@types/webpack-env": "^1.16.0",
+    "@typescript-eslint/eslint-plugin": "^4.13.0",
+    "@typescript-eslint/parser": "^4.13.0",
+    "cross-env": "^7.0.3",
+    "eslint": "^7.17.0",
+    "eslint-plugin-eslint-comments": "^3.2.0",
+    "eslint-plugin-import": "^2.22.1",
+    "eslint-plugin-jest": "^24.1.3",
+    "jest": "^26.6.3",
+    "prettier": "2.2.1",
+    "ts-jest": "^26.4.4",
+    "ts-loader": "^8.0.14",
+    "ts-node": "^9.1.1",
+    "tsconfig-paths": "^3.9.0",
+    "typescript": "^4.1.3",
+    "webpack": "^5.14.0",
+    "webpack-cli": "^4.3.1",
+    "webpack-dev-server": "^3.11.2"
+  }
+}
