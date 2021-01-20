@@ -27,9 +27,9 @@
 
 // cf. https://github.com/ktym/d3sparql/blob/master/d3sparql.js#L110
 
+import { Graph, GraphConfig, Option } from "@/types/graph"
 import { Failure, Result, Success } from "@/types/handling"
 import { BooleanMemberJSONResponse, JSONResponse, RDFTerm, ResultsMemberJSONResponse } from "@/types/response"
-import { Graph, GraphConfig, Option } from "@/types/util/graph"
 
 // interface graphConfig {
 //   key1?: string

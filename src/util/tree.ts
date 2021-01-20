@@ -28,60 +28,166 @@
         d3sparql.treemapzoom(json, config)
       }
   */
-d3sparql.tree = function (json, config) {
-  config = config || {}
 
-  const head = json.head.vars
-  const data = json.results.bindings
+import { Failure, Result, Success } from "@/types/handling"
+import { JSONResponse, BooleanMemberJSONResponse, ResultsMemberJSONResponse, RDFTerm } from "@/types/response"
+import { Hogehoge, TraverseProps, Tree, treeConfig } from "@/types/tree"
+import d3 from "d3"
 
-  const opts = {
-    root: config.root || head[0],
-    parent: config.parent || head[1],
-    child: config.child || head[2],
-    value: config.value || head[3] || "value"
-  }
+const hogehoge = (data: Array<{ [key: string]: RDFTerm }>, opts: treeConfig): Hogehoge => {
+  const pair: { [key: string]: Array<string> } = {} //d3.map()
+  const size: { [key: string]: number } = {} //d3.map()
 
-  const pair = d3.map()
-  const size = d3.map()
-  const root = data[0][opts.root].value
-  let parent = (child = children = true)
-  for (let i = 0; i < data.length; i++) {
-    parent = data[i][opts.parent].value
-    child = data[i][opts.child].value
-    if (parent != child) {
-      if (pair.has(parent)) {
-        children = pair.get(parent)
-        children.push(child)
-      } else {
-        children = [child]
-      }
-      pair.set(parent, children)
-      if (data[i][opts.value]) {
-        size.set(child, data[i][opts.value].value)
-      }
-    }
-  }
-  function traverse(node) {
-    const list = pair.get(node)
-    if (list) {
-      const children = list.map(function (d) {
-        return traverse(d)
-      })
-      // sum of values of children
-      const subtotal = d3.sum(children, function (d) {
-        return d.value
-      })
-      // add a value of parent if exists
-      const total = d3.sum([subtotal, size.get(node)])
-      return { name: node, children: children, value: total }
+  for (const datum of data) {
+    const parent = datum[opts.parent].value
+    const child = datum[opts.child].value
+
+    if (parent == child) {
+      continue
     } else {
-      return { name: node, value: size.get(node) || 1 }
-    }
-  }
-  const tree = traverse(root)
+      if (parent in pair) {
+        const children = pair[parent]
+        children.push(child)
+        pair[parent] = children
+      } else {
+        const children = [child]
+        pair[parent] = children
+      }
 
-  if (d3sparql.debug) {
-    console.log(JSON.stringify(tree))
+      const key = opts.value
+      if (datum[key]) {
+        size[child] = Number(datum[key].value)
+        if (Number.isNaN(size[child])) {
+          console.warn("Caution: size of child node is `NaN` !\n")
+        }
+      }
+    }
+    // end for-loop
+  }
+
+  return { pair: pair, size: size }
+}
+
+const traverse = (props: TraverseProps): Tree => {
+  const { pair, size, nodeName } = props
+  const list = pair[nodeName]
+
+  if (!list) {
+    return { name: nodeName, value: size[nodeName] || 1 }
+  } else {
+    const children = list.map((name) => traverse({ ...props, nodeName: name }))
+    // sum of values of children
+    const subTotal = d3.sum(children, (d) => d.value)
+    // add a value of parent if exists
+    const total = d3.sum([subTotal, size[nodeName]])
+    return { name: nodeName, children: children, value: total }
+  }
+}
+
+const mainProcess = (json: ResultsMemberJSONResponse, config?: treeConfig): Tree => {
+  const { head, results } = json
+  const data = results.bindings
+  const vars = head.vars ? head.vars : []
+
+  const opts: treeConfig = {
+    root: config ? config.root : vars[0],
+    parent: config ? config.parent : vars[1],
+    child: config ? config.child : vars[2],
+    value: config ? config.value : vars[3] || "value"
+  }
+
+  const root_bindings = data[0]
+  // TODO: assert error
+  const root = opts.root in root_bindings ? root_bindings[opts.root].value : "none"
+
+  return traverse({ nodeName: root, ...hogehoge(data, opts) })
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const subProcess = (json: BooleanMemberJSONResponse, config?: treeConfig): Tree => {
+  const tree: Tree = {
+    name: "node",
+    value: 0
   }
   return tree
 }
+
+const parseTree = (json: JSONResponse, config?: treeConfig): Result<Tree, TypeError> => {
+  if (json.results) {
+    const tree = mainProcess({ head: json.head, results: json.results }, config)
+    return new Success(tree)
+  } else if (json.boolean) {
+    const tree = subProcess({ head: json.head, boolean: json.boolean }, config)
+    return new Success(tree)
+  } else {
+    return new Failure(new TypeError(`${JSON.stringify(json, null, 2)}\n\nJSON response is invalid !\n\n`))
+  }
+}
+
+export const tree = (json: JSONResponse, config?: treeConfig) => {
+  const res = parseTree(json, config)
+  if (res.isSuccess()) {
+    return res.value
+  } else {
+    throw res.isFailure() // TypeError
+  }
+}
+
+// d3sparql.tree = function (json, config) {
+//   config = config || {}
+
+//   const head = json.head.vars
+//   const data = json.results.bindings
+
+//   const opts = {
+//     root: config.root || head[0],
+//     parent: config.parent || head[1],
+//     child: config.child || head[2],
+//     value: config.value || head[3] || "value"
+//   }
+
+//   const pair = d3.map()
+//   const size = d3.map()
+//   const root = data[0][opts.root].value
+//   let parent = (child = children = true)
+//   for (let i = 0; i < data.length; i++) {
+//     parent = data[i][opts.parent].value
+//     child = data[i][opts.child].value
+//     if (parent != child) {
+//       if (pair.has(parent)) {
+//         children = pair.get(parent)
+//         children.push(child)
+//       } else {
+//         children = [child]
+//       }
+//       pair.set(parent, children)
+//       if (data[i][opts.value]) {
+//         size.set(child, data[i][opts.value].value)
+//       }
+//     }
+//   }
+
+//   function traverse(node) {
+//     const list = pair.get(node)
+//     if (list) {
+//       const children = list.map(function (d) {
+//         return traverse(d)
+//       })
+//       // sum of values of children
+//       const subtotal = d3.sum(children, function (d) {
+//         return d.value
+//       })
+//       // add a value of parent if exists
+//       const total = d3.sum([subtotal, size.get(node)])
+//       return { name: node, children: children, value: total }
+//     } else {
+//       return { name: node, value: size.get(node) || 1 }
+//     }
+//   }
+//   const tree = traverse(root)
+
+//   if (d3sparql.debug) {
+//     console.log(JSON.stringify(tree))
+//   }
+//   return tree
+// }

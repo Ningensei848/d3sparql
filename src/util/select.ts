@@ -1,6 +1,4 @@
-// function を定義してdefault export するだけでいい
-
-import * as d3 from "d3"
+import d3 from "d3"
 
 const select = (selector: HTMLElement | SVGAElement, type: string): unknown => {
   if (selector) {
